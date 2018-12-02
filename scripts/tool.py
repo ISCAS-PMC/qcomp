@@ -94,18 +94,19 @@ def get_invocations(benchmark : Benchmark):
         for prep in preprocessing_steps:
             default_inv.add_command(prep)
         default_inv.note += " " + " ".join(preprocessing_notes)
-    default_inv.add_command("java -jar ./epmc-standard.jar check {}".format(benchmark_settings))
+    memsize = "12288m"
+    default_inv.add_command("java -Xms{} -Xmx{} -jar ./epmc-standard.jar check {}".format(memsize, memsize, benchmark_settings))
     invocations.append(default_inv)
 
     # specific settings
     # dd engine 
-    if benchmark.benchmark.get_short_property_type() == "E" or benchmark.benchmark.get_short_property_type() == "Ei" or benchmark.benchmark.get_short_property_type() == "Eb":
+    if benchmark.get_short_property_type() == "E" or benchmark.get_short_property_type() == "Ei" or benchmark.get_short_property_type() == "Eb":
         return invocations
     specific_inv = Invocation()
     specific_inv.identifier = "specific"
     specific_inv.note = "Settings specific for this benchmark. Use symbolic model checking algorithms with BDDs"
     specific_inv.note += " " + " ".join(preprocessing_notes)
-    specific_inv.add_command("java -jar ./epmc-standard.jar check {} --engine dd".format(benchmark_settings))
+    specific_inv.add_command("java -Xms{} -Xmx{} -jar ./epmc-standard.jar check {} --engine dd".format(memsize, memsize, benchmark_settings))
     invocations.append(specific_inv)
 
     return invocations
