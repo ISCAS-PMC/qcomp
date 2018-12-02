@@ -100,7 +100,7 @@ def get_invocations(benchmark : Benchmark):
     # specific settings
     # dd engine 
     if benchmark.benchmark.get_short_property_type() == "E" or benchmark.benchmark.get_short_property_type() == "Ei" or benchmark.benchmark.get_short_property_type() == "Eb":
-		return invocations
+        return invocations
     specific_inv = Invocation()
     specific_inv.identifier = "specific"
     specific_inv.note = "Settings specific for this benchmark. Use symbolic model checking algorithms with BDDs"
@@ -126,4 +126,4 @@ def get_result(benchmark : Benchmark, execution : Execution):
         return None
     pos = pos + len(benchmark.get_property_name() + ":")
     eol_pos = log.find("\n", pos)
-    return log[pos:eol_pos]
+    return log[pos:eol_pos].strip()
