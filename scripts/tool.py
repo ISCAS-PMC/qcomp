@@ -70,6 +70,7 @@ def get_invocations(benchmark : Benchmark):
     preprocessing_steps = []
     preprocessing_notes = []
     benchmark_settings = ""
+    isJaniFile = False
     if benchmark.is_prism():
 		# set parameters
         benchmark_settings = "--model-input-files {} --property-input-files {} --property-input-names {} --translate-messages false".format(benchmark.get_prism_program_filename(), benchmark.get_prism_property_filename(), benchmark.get_property_name())
@@ -79,6 +80,7 @@ def get_invocations(benchmark : Benchmark):
         #    benchmark_settings += " --prismcompat"
     else:
         # put properties in saparate files 
+        isJaniFile = True
         benchmark_settings = "--model-input-files {} --model-input-type jani --property-input-names {} --translate-messages false".format(benchmark.get_janifilename(), benchmark.get_property_name())
         if benchmark.get_open_parameter_def_string() != "":
             benchmark_settings += " --const {}".format(benchmark.get_open_parameter_def_string())
@@ -99,12 +101,12 @@ def get_invocations(benchmark : Benchmark):
     invocations.append(default_inv)
 
     # specific settings
-    # dd engine 
-    if benchmark.get_short_property_type() == "E" or benchmark.get_short_property_type() == "Ei" or benchmark.get_short_property_type() == "Eb":
+    # dd engine not availabel for JANI model and expected properties
+    if isJaniFile or benchmark.get_short_property_type() == "E" or benchmark.get_short_property_type() == "Ei" or benchmark.get_short_property_type() == "Eb":
         return invocations
     specific_inv = Invocation()
     specific_inv.identifier = "specific"
-    specific_inv.note = "Settings specific for this benchmark. Use symbolic model checking algorithms with BDDs"
+    specific_inv.note = "Settings specific for this benchmark. Use symbolic model checking algorithms with BDDs for PRISM models and non-expected properties"
     specific_inv.note += " " + " ".join(preprocessing_notes)
     specific_inv.add_command("java -Xms{} -Xmx{} -jar ./epmc-standard.jar check {} --engine dd".format(memsize, memsize, benchmark_settings))
     invocations.append(specific_inv)
