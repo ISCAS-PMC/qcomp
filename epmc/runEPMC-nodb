@@ -16,7 +16,8 @@ sub callEPMC_prism {
     my $model = shift;
     my $property = shift;
 	my $const = shift;
-    
+
+	
     my $optionsString = "--translate-messages false";
     $optionsString .= " --engine dd";
     
@@ -61,6 +62,9 @@ while (my $rowp = <$fprism>) {
 	if ($line ge 2) {
 		chomp($rowp);
 		my ($model, $property, $const) = split ',', $rowp;
+		$model =~ s/\"//g;
+		$property =~ s/\"//g;
+		$const =~ s/\"//g;
 		say "/${model}/${property}/${const}/";
 		callEPMC_prism($model, $property, $const);
 	}
@@ -75,6 +79,8 @@ while (my $rowj = <$fjani>) {
 	if ($line ge 2) {
 		chomp($rowj);
 		my ($model, $const) = split ',', $rowj;
+		$model =~ s/\"//g;
+		$const =~ s/\"//g;
 		say "/${model}/${const}/";
 		callEPMC_jani($model, $const);
 	}

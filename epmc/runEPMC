@@ -21,7 +21,7 @@ sub callEPMC_prism {
 	my $const = shift;
     
     my $optionsString = "--translate-messages false";
-    $optionsString .= " --engine dd";
+#     $optionsString .= " --engine dd";
     
 
 	if (length($const)) {
@@ -42,7 +42,7 @@ sub callEPMC_jani {
     
     my $optionsString = "--translate-messages false";
     $optionsString .= " --model-input-type jani";
-    $optionsString .= " --engine dd";
+#     $optionsString .= " --engine dd";
 
     if (length($const)) {
 		my $enc_const = $const;

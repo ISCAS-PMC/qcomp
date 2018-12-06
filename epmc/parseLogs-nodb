@@ -66,6 +66,9 @@ while (my $rowp = <$fprism>) {
 	if ($line ge 2) {
 		chomp($rowp);
 		my ($model, $property, $const) = split ',', $rowp;
+		$model =~ s/\"//g;
+		$property =~ s/\"//g;
+		$const =~ s/\"//g;
 		say "/${model}/${property}/${const}/";
 		parseLog($model, $const);
 	}
@@ -80,6 +83,8 @@ while (my $rowj = <$fjani>) {
 	if ($line ge 2) {
 		chomp($rowj);
 		my ($model, $const) = split ',', $rowj;
+		$model =~ s/\"//g;
+		$const =~ s/\"//g;
 		say "/${model}/${const}/";
 		parseLog($model, $const);
 	}
