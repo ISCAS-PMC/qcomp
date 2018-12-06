@@ -1,0 +1,92 @@
+#!/usr/bin/perl
+
+use v5.12;
+use autodie;
+use DBI;
+use File::Copy;
+
+# my $memsize='8192m';
+my $memsize='12288m';
+my $epmc = "java -Xms${memsize} -Xmx${memsize} -jar epmc-standard.jar";
+my $ltl2tgba = '/usr/local/bin/ltl2tgba';
+my $statisticsout = 10*60;
+
+
+my $tableDir="tables";
+my $resultsTable = "results";
+my $statisticsTable = "statistics";
+
+my $dbh = DBI->connect("dbi:CSV:f_dir=./${tableDir}");
+
+unlink $tableDir."/".$resultsTable if -e $tableDir."/".$resultsTable;
+unlink $tableDir."/".$statisticsTable if -e $tableDir."/".$statisticsTable;
+
+my $create_stm_res = $dbh->prepare("CREATE TABLE ${resultsTable} (model CHAR(100), const CHAR(100), property CHAR(100), value CHAR(100))");
+$create_stm_res->execute();
+$create_stm_res->finish();
+
+my $create_stm_sts = $dbh->prepare("CREATE TABLE ${statisticsTable} (model CHAR(100), const CHAR(100), time CHAR(100), memory CHAR(100))");
+$create_stm_sts->execute();
+$create_stm_sts->finish();
+
+my $insertResults = $dbh->prepare("INSERT INTO ${resultsTable} VALUES(?,?,?,?)");
+my $insertStatistics = $dbh->prepare("INSERT INTO ${statisticsTable} VALUES(?,?,?,?)");
+
+sub parseLog {
+    my $model = shift;
+	my $const = shift;
+	
+    my $logfile = "logs/${model}-${const}.log";
+    my $props = "no";
+    
+    my $time = "";
+    my $memory = "";
+    if ( -e $logfile ) {
+		open(RESULT, $logfile);
+		while (<RESULT>) {
+			if ($_ =~ /real ([1234567890\.]*)/) {
+				$time = $1;
+				$props = "no";
+			}
+			if ($_ =~ /mem ([1234567890\.]*)/) {
+				$memory = $1;
+			}
+			if ($props eq "yes") {
+				if ($_ =~ /([^:]*): (.*)/) {
+					$insertResults->execute($model,$const,$1,$2);
+				}
+			}
+			if ($_ =~ /model-checking-done ([1234567890]+)/) {
+				$props = "yes";
+			}
+		}
+		close(RESULT);
+		$insertStatistics->execute($model,$const,$time,$memory);
+    }
+}
+
+my $select_experiments = $dbh->prepare("SELECT * FROM benchmarks_prism");
+$select_experiments->execute();
+while (my $row = $select_experiments->fetchrow_hashref) {
+    my $model = $row->{'model'};
+    my $const = $row->{'const'};
+    
+	say "$row->{'model'} $row->{'const'}";
+	parseLog($model, $const);
+}
+$select_experiments->finish();
+
+$select_experiments = $dbh->prepare("SELECT * FROM benchmarks_jani");
+$select_experiments->execute();
+while (my $row = $select_experiments->fetchrow_hashref) {
+    my $model = $row->{'model'};
+    my $const = $row->{'const'};
+	say "$row->{'model'} $row->{'const'}";
+	parseLog($model, $const);
+}
+$select_experiments->finish();
+
+$insertResults->finish();
+$insertStatistics->finish();
+
+$dbh->disconnect();
