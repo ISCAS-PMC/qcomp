@@ -23,6 +23,7 @@ public class QCompReferences {
 		System.out.println("Processing " + indexFile);
 		List<String> constants = new LinkedList<String>();
 		List<String> properties = new LinkedList<String>();
+		Map<String, String> propertyType = new HashMap<String, String>();
 		StringBuilder sb = new StringBuilder();
 		JsonReader reader = Json.createReader(new FileReader(indexFile));
 		JsonObject json = reader.readObject();
@@ -36,8 +37,12 @@ public class QCompReferences {
 		}
 
 		JsonArray jaProps = json.getJsonArray("properties");
-		for (JsonValue jvProp : jaProps)
-			properties.add(((JsonObject) jvProp).getString("name"));
+		for (JsonValue jvProp : jaProps) {
+			JsonObject joProp = (JsonObject) jvProp;
+			String prop = joProp.getString("name");
+			properties.add(prop);
+			propertyType.put(prop, joProp.getString("type", "unknown"));
+		}
 
 		JsonArray jaFiles = json.getJsonArray("files");
 		for (JsonValue jvFile : jaFiles) {
@@ -109,6 +114,7 @@ public class QCompReferences {
 					String sConstants = sbConstants.toString().replaceAll("\"", "\"\"");
 					for (String sProperty : properties) {
 						String sEscapedProperty = sProperty.replaceAll("\"", "\"\"");
+						String sEscapedType = propertyType.get(sProperty).replaceAll("\"", "\"\"");
 						String sEscapedResult = mResults.getOrDefault(sProperty, "").replaceAll("\"", "\"\"");
 						sb.append("\n\"")
 							.append(sFile)
@@ -116,6 +122,8 @@ public class QCompReferences {
 							.append(sConstants)
 							.append("\",\"")
 							.append(sEscapedProperty)
+							.append("\",\"")
+							.append(sEscapedType)
 							.append("\",\"")
 							.append(sEscapedResult)
 							.append("\"");
@@ -126,6 +134,8 @@ public class QCompReferences {
 								.append(sConstants)
 								.append("\",\"")
 								.append(sEscapedProperty)
+								.append("\",\"")
+								.append(sEscapedType)
 								.append("\",\"")
 								.append(sEscapedResult)
 								.append("\"");
@@ -154,7 +164,7 @@ public class QCompReferences {
 	 */
 	public static void main(String[] args) throws Exception {
 		try(BufferedWriter ref = new BufferedWriter(new FileWriter("references.csv"))) {
-			ref.write("model,const,property,ref_value");
+			ref.write("model,const,property,type,ref_value");
 			for (String index : args) {
 				ref.write(parseIndexFile(index));
 			}
