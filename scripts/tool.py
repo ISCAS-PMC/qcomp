@@ -80,7 +80,7 @@ def get_invocations(benchmark : Benchmark):
     if benchmark.is_prism():
 		# set parameters
         # --graphsolver-iterative-tolerance 1e-4 since the maximal difference is 1e-4
-        benchmark_settings = "--model-input-files {} --property-input-files {} --property-input-names {} --translate-messages false".format(benchmark.get_prism_program_filename(), benchmark.get_prism_property_filename(), benchmark.get_property_name())
+        benchmark_settings = "--model-input-files {} --property-input-files {} --property-input-names {} --translate-messages false --value-floating-point-output-native true".format(benchmark.get_prism_program_filename(), benchmark.get_prism_property_filename(), benchmark.get_property_name())
         if benchmark.get_open_parameter_def_string() != "":
             benchmark_settings += " --const {}".format(benchmark.get_open_parameter_def_string())
         # if benchmark.is_ctmc():
