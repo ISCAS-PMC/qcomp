@@ -11,19 +11,20 @@ def get_name():
 def is_benchmark_supported(benchmark : Benchmark):
     """ Auxiliary function that returns True if the provided benchmark is supported by the tool"""
 
+    # list of input models ePMC does not support
     if benchmark.is_pta():
         # PTAs are not supported by ePMC
         return False
     if benchmark.is_prism_ma():
         # MAs are not supported by ePMC
         return False
-    if benchmark.get_short_property_type() == "S":
-		# Steady state properties are not supported by ePMC
-        return False
+#    if benchmark.get_short_property_type() == "S":
+#		# Steady state properties are not supported by ePMC
+#        return False
     if benchmark.is_prism_inf():
 		# CTMCs with infinite state-spaces are not supported by ePMC
         return False
-    # list of input models ePMC does not support
+    
     if benchmark.is_galileo():
         return False
     if benchmark.is_greatspn():
@@ -37,6 +38,10 @@ def is_benchmark_supported(benchmark : Benchmark):
     if benchmark.is_modest():
         return False
     
+    # list of properties ePMC supports : unbounded and time-bounded probabilistic reachability
+    if (not benchmark.is_unbounded_probabilistic_reachability()) and (not benchmark.is_time_bounded_probabilistic_reachability()):
+        return False
+
     return True
 
 def is_on_benchmark_list(benchmark : Benchmark):
@@ -49,10 +54,8 @@ def is_on_benchmark_list(benchmark : Benchmark):
     # do not include models with small state spaces, except it's the haddad-monmege one (because we like that)
     # if benchmark.get_max_num_states() is not None and benchmark.get_max_num_states() < 10000 and benchmark.get_model_short_name() != "haddad-monmege":
     #    return False
-    # list of properties ePMC supports
-    if benchmark.is_unbounded_probabilistic_reachability() or benchmark.is_time_bounded_probabilistic_reachability():
-        return True
-    return False
+
+    return True
 
 def get_invocations(benchmark : Benchmark):
     """
@@ -95,25 +98,25 @@ def get_invocations(benchmark : Benchmark):
     # default settings
     default_inv = Invocation()
     default_inv.identifier = "default"
-    default_inv.note = "Default settings."
+    default_inv.note = "Default settings. The option --translate-messages is set to false to ease result parsing. "
     if len(preprocessing_steps) != 0:
         for prep in preprocessing_steps:
             default_inv.add_command(prep)
         default_inv.note += " " + " ".join(preprocessing_notes)
-    memsize = "12288m"
+    memsize = "10240m"
     default_inv.add_command("java -Xms{} -Xmx{} -jar ./epmc-standard.jar check {}".format(memsize, memsize, benchmark_settings))
     invocations.append(default_inv)
 
-    # specific settings
+    # no specific settings
     # dd engine not availabel for JANI model and expected properties
-    if isJaniFile or benchmark.get_short_property_type() == "E" or benchmark.get_short_property_type() == "Ei" or benchmark.get_short_property_type() == "Eb":
-        return invocations
-    specific_inv = Invocation()
-    specific_inv.identifier = "specific"
-    specific_inv.note = "Settings specific for this benchmark. Use symbolic model checking algorithms with BDDs for PRISM models and non-expected properties"
-    specific_inv.note += " " + " ".join(preprocessing_notes)
-    specific_inv.add_command("java -Xms{} -Xmx{} -jar ./epmc-standard.jar check {} --engine dd".format(memsize, memsize, benchmark_settings))
-    invocations.append(specific_inv)
+#    if isJaniFile or benchmark.get_short_property_type() == "E" or benchmark.get_short_property_type() == "Ei" or benchmark.get_short_property_type() == "Eb":
+#        return invocations
+#    specific_inv = Invocation()
+#    specific_inv.identifier = "specific"
+#    specific_inv.note = "Settings specific for this benchmark. Use symbolic model checking algorithms with BDDs for PRISM models and non-expected properties"
+#    specific_inv.note += " " + " ".join(preprocessing_notes)
+#    specific_inv.add_command("java -Xms{} -Xmx{} -jar ./epmc-standard.jar check {} --engine dd".format(memsize, memsize, benchmark_settings))
+#    invocations.append(specific_inv)
 
     return invocations
 
