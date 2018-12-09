@@ -23,19 +23,6 @@ def is_benchmark_supported(benchmark : Benchmark):
     if benchmark.is_prism_inf():
 		# CTMCs with infinite state-spaces are not supported by ePMC
         return False
-    
-    return True
-
-def is_on_benchmark_list(benchmark : Benchmark):
-    """ Returns true, if the given benchmark should appear on the generated benchmark list."""
-
-    # do not include for models that ePMC does not support
-    if not is_benchmark_supported(benchmark):
-        return False
-
-    # do not include models with small state spaces, except it's the haddad-monmege one (because we like that)
-    # if benchmark.get_max_num_states() is not None and benchmark.get_max_num_states() < 10000 and benchmark.get_model_short_name() != "haddad-monmege":
-    #    return False
     # list of input models ePMC does not support
     if benchmark.is_galileo():
         return False
@@ -49,7 +36,23 @@ def is_on_benchmark_list(benchmark : Benchmark):
         return False
     if benchmark.is_modest():
         return False
+    
     return True
+
+def is_on_benchmark_list(benchmark : Benchmark):
+    """ Returns true, if the given benchmark should appear on the generated benchmark list."""
+
+    # do not include for models that ePMC does not support
+    if not is_benchmark_supported(benchmark):
+        return False
+
+    # do not include models with small state spaces, except it's the haddad-monmege one (because we like that)
+    # if benchmark.get_max_num_states() is not None and benchmark.get_max_num_states() < 10000 and benchmark.get_model_short_name() != "haddad-monmege":
+    #    return False
+    # list of properties ePMC supports
+    if benchmark.is_unbounded_probabilistic_reachability() or benchmark.is_time_bounded_probabilistic_reachability():
+        return True
+    return False
 
 def get_invocations(benchmark : Benchmark):
     """
@@ -73,6 +76,7 @@ def get_invocations(benchmark : Benchmark):
     isJaniFile = False
     if benchmark.is_prism():
 		# set parameters
+        # --graphsolver-iterative-tolerance 1e-4 since the maximal difference is 1e-4
         benchmark_settings = "--model-input-files {} --property-input-files {} --property-input-names {} --translate-messages false".format(benchmark.get_prism_program_filename(), benchmark.get_prism_property_filename(), benchmark.get_property_name())
         if benchmark.get_open_parameter_def_string() != "":
             benchmark_settings += " --const {}".format(benchmark.get_open_parameter_def_string())
