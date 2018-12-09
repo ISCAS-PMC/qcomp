@@ -5,17 +5,22 @@ EPMC is a probabilistic model checker written in JAVA with few C libraries.
 EPMC compilation is based on Maven, which requires an active internet connection to download all needed components.
 These are the steps to get and compile EPMC:
 
+sudo apt-get update
 sudo apt-get install git maven make g++ default-jdk
 git clone https://github.com/liyi-david/ePMC.git
 cd ePMC
 ./build.sh
+cp epmc-standard.jar ~
+cd ~
 
-After quite some time, the jar file epmc-standard.jar is generated, which contains EPMC.
-Please make sure EPMC is in the same directory you 
+After quite some time, the jar file epmc-standard.jar is generated, which contains EPMC, and copied to ~.
+
+
 
 
 *** Verification of PLTL properties ***
 In order to work with PLTL properties, EPMC makes use of SPOT to convert the LTL formula to a Büchi automaton.
+You do not have to install spot unless you want to verify PLTL properties with EPMC.
 SPOT is released under GPL v3 and it can be found at https://spot.lrde.epita.fr/index.html
 To install it, just execute the following commands:
 
@@ -30,4 +35,3 @@ sudo ldconfig
 
 The compilation of spot requires quite some time; replace "make" with "make -j n" for an appropriate value of "n" (like the number of CPU cores minus 1) to parallelize the compilation tasks.
 ** NOTE **
-You do not have to install spot unless you want to verify PLTL properties with EPMC.
