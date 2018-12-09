@@ -88,7 +88,7 @@ def get_invocations(benchmark : Benchmark):
     else:
         # put properties in saparate files 
         isJaniFile = True
-        benchmark_settings = "--model-input-files {} --model-input-type jani --property-input-names {} --translate-messages false".format(benchmark.get_janifilename(), benchmark.get_property_name())
+        benchmark_settings = "--model-input-files {} --model-input-type jani --property-input-names {} --translate-messages false --value-floating-point-output-native true".format(benchmark.get_janifilename(), benchmark.get_property_name())
         if benchmark.get_open_parameter_def_string() != "":
             benchmark_settings += " --const {}".format(benchmark.get_open_parameter_def_string())
 
@@ -98,7 +98,7 @@ def get_invocations(benchmark : Benchmark):
     # default settings
     default_inv = Invocation()
     default_inv.identifier = "default"
-    default_inv.note = "Default settings. The option --translate-messages is set to false to ease result parsing. "
+    default_inv.note = "Default settings. The option --translate-messages is set to false to ease the parsing of the output while the --value-floating-point-output-native is set to true to get the float values printed in full, instead of with only 7 digits of precision given by the default %.7f format. "
     if len(preprocessing_steps) != 0:
         for prep in preprocessing_steps:
             default_inv.add_command(prep)
