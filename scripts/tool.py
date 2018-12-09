@@ -15,7 +15,7 @@ def is_benchmark_supported(benchmark : Benchmark):
     if benchmark.is_pta():
         # PTAs are not supported by ePMC
         return False
-    if benchmark.is_prism_ma():
+    if benchmark.is_ma():
         # MAs are not supported by ePMC
         return False
 #    if benchmark.get_short_property_type() == "S":
@@ -25,18 +25,18 @@ def is_benchmark_supported(benchmark : Benchmark):
 		# CTMCs with infinite state-spaces are not supported by ePMC
         return False
     
-    if benchmark.is_galileo():
-        return False
-    if benchmark.is_greatspn():
-        return False
-    if benchmark.is_modest():
-        return False
-    if benchmark.is_ppddl():
-        return False
-    if benchmark.is_pgcl():
-        return False
-    if benchmark.is_modest():
-        return False
+    #if benchmark.is_galileo():
+        #return False
+    #if benchmark.is_greatspn():
+        #return False
+    #if benchmark.is_modest():
+        #return False
+    #if benchmark.is_ppddl():
+        #return False
+    #if benchmark.is_pgcl():
+        #return False
+    #if benchmark.is_modest():
+        #return False
     
     # list of properties ePMC supports : unbounded and time-bounded probabilistic reachability
     if (not benchmark.is_unbounded_probabilistic_reachability()) and (not benchmark.is_time_bounded_probabilistic_reachability()):
