@@ -1,0 +1,82 @@
+#!/usr/bin/perl
+
+use v5.12;
+use autodie;
+use DBI;
+use File::Copy;
+
+# my $memsize='8192m';
+my $memsize='4096m';#'12288m';
+my $epmc = "java -Xms${memsize} -Xmx${memsize} -jar epmc-standard.jar";
+my $ltl2tgba = '/usr/local/bin/ltl2tgba';
+my $timeout = 10*60;
+
+my $tableDir="tables";
+
+my $dbh = DBI->connect("dbi:CSV:f_dir=./${tableDir}");
+
+sub callEPMC_prism {
+    my $model = shift;
+    my $property = shift;
+	my $const = shift;
+    
+    my $optionsString = "--translate-messages false";
+    $optionsString .= " --value-floating-point-output-native true";
+#     $optionsString .= " --engine dd";
+    
+
+	if (length($const)) {
+		my $enc_const = $const;
+		$enc_const =~ s/#/,/g;
+		$optionsString .= " --const $enc_const";
+    }
+		
+    my $logfile = "logs/${model}-${const}.log";
+    my $callString = "{ /usr/bin/time -f \"real %e\\nuser %U\\nsys %S\\nmem %M\\n\" timeout ${timeout} ${epmc} check --model-input-files benchmarks/${model} --property-input-files benchmarks/${property} ${optionsString} > ${logfile} 2>&1 ; }";
+    say "    $callString";
+    `${callString}`;
+}
+
+sub callEPMC_jani {
+    my $model = shift;
+	my $const = shift;
+    
+    my $optionsString = "--translate-messages false";
+    $optionsString .= " --model-input-type jani";
+    $optionsString .= " --value-floating-point-output-native true";
+#     $optionsString .= " --engine dd";
+
+    if (length($const)) {
+		my $enc_const = $const;
+		$enc_const =~ s/#/,/g;
+		$optionsString .= " --const $enc_const";
+    }
+		
+    my $logfile = "logs/${model}-${const}.log";
+    my $callString = "{ /usr/bin/time -f \"real %e\\nuser %U\\nsys %S\\nmem %M\\n\" timeout ${timeout} ${epmc} check --model-input-files benchmarks/${model} ${optionsString} > ${logfile} 2>&1 ; }";
+    say "    $callString";
+    `${callString}`;
+}
+
+my $select_experiments = $dbh->prepare("SELECT * FROM benchmarks_prism");
+$select_experiments->execute();
+while (my $row = $select_experiments->fetchrow_hashref) {
+    my $model = $row->{'model'};
+	my $property = $row->{'property'};
+    my $const = $row->{'const'};
+	say "$row->{'model'} $row->{'property'} $row->{'const'}";
+	callEPMC_prism($model, $property, $const);
+}
+$select_experiments->finish();
+
+$select_experiments = $dbh->prepare("SELECT * FROM benchmarks_jani");
+$select_experiments->execute();
+while (my $row = $select_experiments->fetchrow_hashref) {
+    my $model = $row->{'model'};
+    my $const = $row->{'const'};
+	say "$row->{'model'} $row->{'const'}";
+	callEPMC_jani($model, $const);
+}
+$select_experiments->finish();
+
+$dbh->disconnect();

@@ -1,0 +1,95 @@
+#!/usr/bin/perl
+
+use v5.12;
+use autodie;
+
+my $tableDir="tables";
+my $resultsTable = "results.csv";
+my $statisticsTable = "statistics.csv";
+
+my $file_statistics = "${tableDir}/${statisticsTable}";
+my $file_results = "${tableDir}/${resultsTable}";
+open(my $fstatistics, '>', $file_statistics);
+open(my $fresults, '>', $file_results);
+printf $fstatistics "model,const,time,memory";
+printf $fresults "model,const,property,value";
+
+sub parseLog {
+    my $model = shift;
+	my $const = shift;
+	my $escmodel = $model =~ s/\"/\"\"/gr;
+	my $escconst = $const =~ s/\"/\"\"/gr;
+	my $escformula;
+	my $escresult;
+	my $esctime;
+	my $escmemory;
+	
+	
+    my $logfile = "logs/${model}-${const}.log";
+    my $props = "no";
+    
+    my $time = "";
+    my $memory = "";
+    if ( -e $logfile ) {
+		open(RESULT, $logfile);
+		while (<RESULT>) {
+			if ($_ =~ /real ([1234567890\.]*)/) {
+				$time = $1;
+				$props = "no";
+			}
+			if ($_ =~ /mem ([1234567890\.]*)/) {
+				$memory = $1;
+			}
+			if ($props eq "yes") {
+				if ($_ =~ /([^:]*): (.*)/) {
+					$escformula = $1 =~ s/\"/\"\"/gr;
+					$escresult = $2 =~ s/\"/\"\"/gr;
+					printf $fresults "\n\"${model}\",\"${const}\",\"${escformula}\",\"${escresult}\"";
+				}
+			}
+			if ($_ =~ /model-checking-done ([1234567890]+)/) {
+				$props = "yes";
+			}
+		}
+		close(RESULT);
+		$esctime = $time =~ s/\"/\"\"/gr;
+		$escmemory = $memory =~ s/\"/\"\"/gr;
+		printf $fstatistics "\n\"${model}\",\"${const}\",\"${esctime}\",\"${escmemory}\"";
+    }
+}
+
+my $file_prism = "${tableDir}/benchmarks_prism";
+open my $fprism, $file_prism;
+my $line = 0;
+while (my $rowp = <$fprism>) {
+	$line = $line + 1;
+	if ($line ge 2) {
+		chomp($rowp);
+		my ($model, $property, $const) = split ',', $rowp;
+		$model =~ s/\"//g;
+		$property =~ s/\"//g;
+		$const =~ s/\"//g;
+		say "/${model}/${property}/${const}/";
+		parseLog($model, $const);
+	}
+}
+close $fprism;
+
+my $file_jani = "${tableDir}/benchmarks_jani";
+open my $fjani, $file_jani;
+$line = 0;
+while (my $rowj = <$fjani>) {
+	$line = $line + 1;
+	if ($line ge 2) {
+		chomp($rowj);
+		my ($model, $const) = split ',', $rowj;
+		$model =~ s/\"//g;
+		$const =~ s/\"//g;
+		say "/${model}/${const}/";
+		parseLog($model, $const);
+	}
+}
+close $fjani;
+
+close $fresults;
+close $fstatistics;
