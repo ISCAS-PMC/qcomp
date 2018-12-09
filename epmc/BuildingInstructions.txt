@@ -11,7 +11,7 @@ cd ePMC
 ./build.sh
 
 After quite some time, the jar file epmc-standard.jar is generated, which contains EPMC.
-
+Please make sure EPMC is in the same directory you 
 
 
 *** Verification of PLTL properties ***
@@ -29,3 +29,5 @@ sudo make install
 sudo ldconfig
 
 The compilation of spot requires quite some time; replace "make" with "make -j n" for an appropriate value of "n" (like the number of CPU cores minus 1) to parallelize the compilation tasks.
+** NOTE **
+You do not have to install spot unless you want to verify PLTL properties with EPMC.
