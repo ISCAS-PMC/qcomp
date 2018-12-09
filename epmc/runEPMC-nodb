@@ -1,0 +1,88 @@
+#!/usr/bin/perl
+
+use v5.12;
+use autodie;
+use File::Copy;
+
+# my $memsize='8192m';
+my $memsize='12288m';
+my $epmc = "java -Xms${memsize} -Xmx${memsize} -jar epmc-standard.jar";
+my $ltl2tgba = '/usr/local/bin/ltl2tgba';
+my $timeout = 10*60;
+
+my $tableDir="tables";
+
+sub callEPMC_prism {
+    my $model = shift;
+    my $property = shift;
+	my $const = shift;
+
+	
+    my $optionsString = "--translate-messages false";
+    $optionsString .= " --engine dd";
+    
+
+	if (length($const)) {
+		my $enc_const = $const;
+		$enc_const =~ s/#/,/g;
+		$optionsString .= " --const $enc_const";
+    }
+		
+    my $logfile = "logs/${model}-${const}.log";
+    my $callString = "{ /usr/bin/time -f \"real %e\\nuser %U\\nsys %S\\nmem %M\\n\" timeout ${timeout} ${epmc} check --model-input-files benchmarks/${model} --property-input-files benchmarks/${property} ${optionsString} > ${logfile} 2>&1 ; }";
+    say "    $callString";
+    `${callString}`;
+}
+
+sub callEPMC_jani {
+    my $model = shift;
+	my $const = shift;
+    
+    my $optionsString = "--translate-messages false";
+    $optionsString .= " --model-input-type jani";
+    $optionsString .= " --engine dd";
+
+    if (length($const)) {
+		my $enc_const = $const;
+		$enc_const =~ s/#/,/g;
+		$optionsString .= " --const $enc_const";
+    }
+		
+    my $logfile = "logs/${model}-${const}.log";
+    my $callString = "{ /usr/bin/time -f \"real %e\\nuser %U\\nsys %S\\nmem %M\\n\" timeout ${timeout} ${epmc} check --model-input-files benchmarks/${model} ${optionsString} > ${logfile} 2>&1 ; }";
+    say "    $callString";
+    `${callString}`;
+}
+
+my $file_prism = "${tableDir}/benchmarks_prism";
+open my $fprism, $file_prism;
+my $line = 0;
+while (my $rowp = <$fprism>) {
+	$line = $line + 1;
+	if ($line ge 2) {
+		chomp($rowp);
+		my ($model, $property, $const) = split ',', $rowp;
+		$model =~ s/\"//g;
+		$property =~ s/\"//g;
+		$const =~ s/\"//g;
+		say "/${model}/${property}/${const}/";
+		callEPMC_prism($model, $property, $const);
+	}
+}
+close $fprism;
+
+my $file_jani = "${tableDir}/benchmarks_jani";
+open my $fjani, $file_jani;
+$line = 0;
+while (my $rowj = <$fjani>) {
+	$line = $line + 1;
+	if ($line ge 2) {
+		chomp($rowj);
+		my ($model, $const) = split ',', $rowj;
+		$model =~ s/\"//g;
+		$const =~ s/\"//g;
+		say "/${model}/${const}/";
+		callEPMC_jani($model, $const);
+	}
+}
+close $fjani;
