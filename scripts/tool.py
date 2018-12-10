@@ -38,8 +38,8 @@ def is_benchmark_supported(benchmark : Benchmark):
     #if benchmark.is_modest():
         #return False
     
-    # list of properties ePMC supports : unbounded and time-bounded probabilistic reachability
-    if (not benchmark.is_unbounded_probabilistic_reachability()) and (not benchmark.is_time_bounded_probabilistic_reachability()):
+    # list of properties ePMC supports : unbounded and time-bounded probabilistic reachability; steady-state probability
+    if (not benchmark.is_unbounded_probabilistic_reachability()) and (not benchmark.is_time_bounded_probabilistic_reachability()) and (not benchmark.is_steady_state_probability()):
         return False
 
     return True
